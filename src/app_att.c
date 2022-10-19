@@ -83,7 +83,7 @@ static const u8 my_ManCharVal[5] = {
 	U16_LO(DeviceInformation_ManName_DP_H), U16_HI(DeviceInformation_ManName_DP_H),
 	U16_LO(CHARACTERISTIC_UUID_MANUFACTURER_NAME), U16_HI(CHARACTERISTIC_UUID_MANUFACTURER_NAME)
 };
-#if DEVICE_TYPE == DEVICE_MHO_C401
+#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_AZARTON)
 static const u8 my_ModelStr[] = {"MHO-C401"};
 static const u8 my_SerialStr[] = {"G-19-000000000000000"};
 static const u8 my_FirmStr[] = {"github.com/pvvx"}; // "1.0.0_0010"

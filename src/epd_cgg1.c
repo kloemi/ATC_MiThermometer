@@ -454,4 +454,4 @@ _attribute_ram_code_ void show_clock(void) {
 }
 #endif // USE_CLOCK
 
-#endif // DEVICE_TYPE == DEVICE_MHO_C401
+#endif

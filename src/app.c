@@ -87,7 +87,7 @@ const cfg_t def_cfg = {
 #if USE_FLASH_MEMO
 		.averaging_measurements = 60, // * measure_interval = 10 * 60 = 600 sec = 10 minutes
 #endif
-#elif DEVICE_TYPE == DEVICE_MHO_C401
+#elif (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_AZARTON)
 		.flg.comfort_smiley = true,
 		.measure_interval = 8, // * advertising_interval = 20 sec
 		.min_step_time_update_lcd = 199, //x0.05 sec,   9.95 sec
@@ -176,7 +176,7 @@ void set_hw_version(void) {
 		cfg.hw_cfg.hwver = 4; // HW:B1.6
 		my_HardStr[3] = '6';
 	}
-#elif DEVICE_TYPE == DEVICE_MHO_C401
+#elif (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_AZARTON)
 	cfg.hw_cfg.hwver = 1;
 #elif DEVICE_TYPE == DEVICE_CGG1
 #if DEVICE_CGG1_ver == 2022
@@ -324,7 +324,7 @@ _attribute_ram_code_ static void suspend_enter_cb(u8 e, u8 *p, int n) {
 void low_vbat(void) {
 	if (cfg.hw_cfg.shtc3 && wrk_measure)
 		soft_reset_sensor();
-#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_CGG1)
+#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_CGG1) || (DEVICE_TYPE == DEVICE_AZARTON)
 	while(task_lcd()) pm_wait_ms(10);
 #endif
 	show_temp_symbol(0);
@@ -336,7 +336,7 @@ void low_vbat(void) {
 #endif
 	show_battery_symbol(1);
 	update_lcd();
-#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_CGG1)
+#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_CGG1) || (DEVICE_TYPE == DEVICE_AZARTON)
 	while(task_lcd()) pm_wait_ms(10);
 #endif
 	cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_TIMER,
@@ -730,7 +730,7 @@ _attribute_ram_code_ void main_loop(void) {
 					tim_measure = new;
 					start_measure = 1;
 				}
-#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_CGG1)
+#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_CGG1) || (DEVICE_TYPE == DEVICE_AZARTON)
 				else
 				if ((!stage_lcd) && (new - tim_last_chow >= min_step_time_update_lcd)) {
 #else
@@ -761,6 +761,10 @@ _attribute_ram_code_ void main_loop(void) {
 			} else {
 				cpu_set_gpio_wakeup(EPD_BUSY, Level_High, 0);  // pad high wakeup deepsleep disable
 			}
+		}
+#elif (DEVICE_TYPE == DEVICE_AZARTON)
+		if (wrk_measure == 0 && stage_lcd) {
+			task_lcd();
 		}
 #endif
 		bls_pm_setSuspendMask(
