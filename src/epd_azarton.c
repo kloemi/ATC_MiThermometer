@@ -10,8 +10,8 @@
 
 #define DEF_EPD_REFRESH_CNT	32
 
-RAM uint8_t display_buff[18];
-RAM uint8_t display_cmp_buff[18];
+RAM uint8_t display_buff[14];
+RAM uint8_t display_cmp_buff[14];
 RAM uint8_t stage_lcd;
 RAM uint8_t flg_lcd_init;
 RAM uint8_t lcd_refresh_cnt;
@@ -28,10 +28,8 @@ const uint8_t bottom_left[22] = {9, 1, 9, 7, 8, 5, 1, 1, 0, 3, 1, 4, 9, 4, 10, 0
 const uint8_t bottom_right[22] = {7, 7, 6, 5, 2, 0, 2, 3, 0, 2, 1, 7, 2, 6, 7, 4, 7, 1, 8, 6, 6, 2};
 
 // These values closely reproduce times captured with logic analyser
-//#define delay_SPI_end_cycle() pm_wait_us(3) // 1.5 us
-//#define delay_EPD_SCL_pulse() pm_wait_us(3) // 1.5 us
-#define delay_SPI_end_cycle() cpu_stall_wakeup_by_timer0((CLOCK_SYS_CLOCK_1US*15)/10) // real clk 4.4 + 4.4 us : 114 kHz)
-#define delay_EPD_SCL_pulse() cpu_stall_wakeup_by_timer0((CLOCK_SYS_CLOCK_1US*15)/10) // real clk 4.4 + 4.4 us : 114 kHz)
+#define delay_SPI_end_cycle() cpu_stall_wakeup_by_timer0((CLOCK_SYS_CLOCK_1US*12)/10) // real clk 4.4 + 4.4 us : 114 kHz)
+#define delay_EPD_SCL_pulse() cpu_stall_wakeup_by_timer0((CLOCK_SYS_CLOCK_1US*12)/10) // real clk 4.4 + 4.4 us : 114 kHz)
 
 /*
 Now define how each digit maps to the segments:
@@ -151,9 +149,10 @@ _attribute_ram_code_ void show_ble_symbol(bool state){
 
 // 223 us
 _attribute_ram_code_ __attribute__((optimize("-Os"))) static void transmit(uint8_t cd, uint8_t data_to_send) {
-/*     gpio_write(EPD_SCL, LOW);
-    // enable SPI
-    gpio_write(EPD_CSB, LOW);
+    
+	gpio_write(EPD_SCL, HIGH);
+	// enable SPI
+	gpio_write(EPD_CSB, LOW);
     delay_EPD_SCL_pulse();
 
     // send the first bit, this indicates if the following is a command or data
@@ -162,18 +161,21 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) static void transmit(uint8
     else
         gpio_write(EPD_SDA, LOW);
     delay_EPD_SCL_pulse();
-    gpio_write(EPD_SCL, HIGH);
+    gpio_write(EPD_SCL, LOW);
+    delay_EPD_SCL_pulse();
+	gpio_write(EPD_SCL, HIGH);
     delay_EPD_SCL_pulse();
 
     // send 8 bits
     for (int i = 0; i < 8; i++) {
-        // start the clock cycle
-        gpio_write(EPD_SCL, LOW);
         // set the MOSI according to the data
         if (data_to_send & 0x80)
             gpio_write(EPD_SDA, HIGH);
         else
             gpio_write(EPD_SDA, LOW);
+		
+		// start the clock cycle
+        gpio_write(EPD_SCL, LOW);
         // prepare for the next bit
         data_to_send = (data_to_send << 1);
         delay_EPD_SCL_pulse();
@@ -182,11 +184,9 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) static void transmit(uint8
         delay_EPD_SCL_pulse();
     }
 
-    // finish by ending the clock cycle and disabling SPI
-    gpio_write(EPD_SCL, LOW);
-    delay_SPI_end_cycle();
+    // finish by disabling SPI
     gpio_write(EPD_CSB, HIGH);
-    delay_SPI_end_cycle(); */
+    delay_SPI_end_cycle();
 }
 
 _attribute_ram_code_ __attribute__((optimize("-Os"))) static void epd_set_digit(uint8_t *buf, uint8_t digit, const uint8_t *segments) {
@@ -211,7 +211,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) static void epd_set_digit(
 
 /* number in 0.1 (-995..19995), Show: -99 .. -9.9 .. 199.9 .. 1999 */
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_big_number_x10(int16_t number){
-	display_buff[11] = 0;
+	/*display_buff[11] = 0;
 	display_buff[12] = 0;
 	display_buff[13] = 0;
 	display_buff[14] &= BIT(2); //"_"
@@ -230,7 +230,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_big_number_x10(i
    		display_buff[14] = BIT(3) | BIT(4) | BIT(5);
    		display_buff[15] = BIT(5) | BIT(6) | BIT(7);
 	} else {
-		/* number: -995..19995 */
+		/* number: -995..19995 *
 		if (number > 1995 || number < -95) {
 			display_buff[16] &= ~BIT(5); // no point, show: -99..1999
 			if (number < 0){
@@ -245,13 +245,13 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_big_number_x10(i
 				display_buff[14] = BIT(0); // "-"
 			}
 		}
-		/* number: -99..1999 */
+		/* number: -99..1999 *
 		if (number > 999) display_buff[12] |= BIT(3); // "1" 1000..1999
 		if (number > 99) epd_set_digit(display_buff, number / 100 % 10, top_left);
 		if (number > 9) epd_set_digit(display_buff, number / 10 % 10, top_middle);
 		else epd_set_digit(display_buff, 0, top_middle);
 		epd_set_digit(display_buff, number % 10, top_right);
-	}
+	}*/
 }
 
 /* -9 .. 99 */
@@ -293,14 +293,17 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_small_number(int
 
 void init_lcd(void) {
 	stage_lcd = 0;
-/* 	// pulse RST_N low for 110 microseconds
-    gpio_write(EPD_RST, LOW);
-    pm_wait_us(110);
-	lcd_refresh_cnt = DEF_EPD_REFRESH_CNT;
-    stage_lcd = 1;
-    epd_updated = 0;
-    flg_lcd_init = 3;
-    gpio_write(EPD_RST, HIGH); */
+	// pulse SDA low for 110 milliseconds
+	gpio_write(EPD_SDA, LOW);
+    pm_wait_ms(140);
+	gpio_write(EPD_SDA, HIGH);
+
+	transmit(0, 0x002B);
+	pm_wait_ms(10);
+	transmit(0, 0x00A7);
+	pm_wait_ms(10);
+	transmit(0, 0x00E0);
+	pm_wait_us(75);
 }
 
 _attribute_ram_code_ void update_lcd(void){
