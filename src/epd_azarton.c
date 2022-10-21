@@ -17,6 +17,9 @@ RAM uint8_t flg_lcd_init;
 RAM uint8_t lcd_refresh_cnt;
 RAM uint8_t epd_updated;
 
+const uint8_t LUT_init1[12] = {0x82, 0x68, 0x50,  0xE8, 0xD0, 0xA8,  0x65, 0x7B, 0x81,  0xE4, 0xE7, 0x0E};
+const uint8_t LUT_init2[12] = {0x82, 0x80, 0x00,  0xC8, 0x80, 0x80,  0x62, 0x7B, 0x81,  0xE4, 0xE7, 0x0E};
+
 //----------------------------------
 // define segments
 // the data in the arrays consists of {byte, bit} pairs of each segment
@@ -293,6 +296,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_small_number(int
 
 void init_lcd(void) {
 	stage_lcd = 0;
+	memset(display_buff, 0, sizeof(display_buff));
 	// pulse SDA low for 110 milliseconds
 	gpio_write(EPD_SDA, LOW);
     pm_wait_ms(140);
@@ -304,6 +308,29 @@ void init_lcd(void) {
 	pm_wait_ms(10);
 	transmit(0, 0x00E0);
 	pm_wait_us(75);
+	for (int i = 0; i < 12; i++)
+		transmit(0, LUT_init1[i]);
+	pm_wait_ms(84);
+
+	transmit(0, 0x00AC);
+	transmit(0, 0x002B);
+	pm_wait_ms(5);
+
+	transmit(0, 0x0040);
+	transmit(0, 0x00A9);
+	transmit(0, 0x00A8);
+
+	for (int i = 0; i < 14; i++)
+		transmit(1, display_buff[i]);
+
+	transmit(0, 0x00AB);
+	transmit(0, 0x00AA);
+	transmit(0, 0x00AF);
+	pm_wait_ms(1600);
+
+	transmit(0, 0x00AE);
+	transmit(0, 0x0028);
+	transmit(0, 0x00AD);
 }
 
 _attribute_ram_code_ void update_lcd(void){

@@ -134,14 +134,14 @@ extern "C" {
 #elif DEVICE_TYPE == DEVICE_AZARTON
 
 // TLSR8251F512ET24
-// GPIO_PA5 - used EPD_SHD
+// GPIO_PA5 - 
 // GPIO_PA6 - used EPD_CSB
 // GPIO_PA7 - SWS, free, (debug TX)
 // GPIO_PB6 - used KEY, pcb mark "P5"
 // GPIO_PB7 - used EPD_SDA
 // GPIO_PC2 - SDA, used I2C
 // GPIO_PC3 - SCL, used I2C
-// GPIO_PC4 -
+// GPIO_PC4 - used EPD_SHD
 // GPIO_PD2 - used EPD_SDA
 // GPIO_PD7 - used EPD_SCL
 
