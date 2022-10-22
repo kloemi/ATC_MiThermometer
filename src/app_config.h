@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#define VERSION 0x38	 // BCD format (0x34 -> '3.4')
+#define VERSION 0x38	   // BCD format (0x34 -> '3.4')
 #define EEP_SUP_VER 0x09 // EEP data minimum supported version
 
 #define DEVICE_LYWSD03MMC  0x055B	// LCD display LYWSD03MMC
@@ -18,7 +18,7 @@ extern "C" {
 
 #define BLE_SECURITY_ENABLE 1 // = 1 support pin-code
 
-#define USE_CLOCK 			1 // = 1 display clock, = 0 smile blinking
+#define USE_CLOCK 			  1 // = 1 display clock, = 0 smile blinking
 #define USE_TIME_ADJUST		1 // = 1 time correction enabled
 #define USE_FLASH_MEMO		1 // = 1 flash logger enable
 #define USE_TRIGGER_OUT 	1 // = 1 use trigger out (GPIO_PA5)
@@ -156,8 +156,20 @@ extern "C" {
 #define I2C_SDA 	GPIO_PC3
 #define I2C_GROUP 	I2C_GPIO_GROUP_C2C3
 
-#define EPD_SHD				GPIO_PC4 // should be high
-#define PULL_WAKEUP_SRC_PC4 PM_PIN_PULLUP_10K
+#define EPD_RST2			GPIO_PB7 // should be high
+#define PULL_WAKEUP_SRC_PB7 PM_PIN_PULLUP_10K
+
+#define EPD_RST 			GPIO_PD7 // should be high
+#define PULL_WAKEUP_SRC_PD7 PM_PIN_PULLUP_1M
+#define PD7_INPUT_ENABLE	1
+#define PD7_DATA_OUT		1
+#define PD7_OUTPUT_ENABLE	1
+#define PD7_FUNC			AS_GPIO
+
+#define EPD_BUSY			GPIO_PA5
+#define PULL_WAKEUP_SRC_PA5 PM_PIN_PULLUP_1M
+#define PA5_INPUT_ENABLE	1
+#define PA5_FUNC			AS_GPIO
 
 #define EPD_CSB				GPIO_PA6
 #define PULL_WAKEUP_SRC_PA6 PM_PIN_PULLUP_1M
@@ -173,12 +185,12 @@ extern "C" {
 #define PD2_OUTPUT_ENABLE	1
 #define PD2_FUNC			AS_GPIO
 
-#define EPD_SCL				GPIO_PD7
-#define PULL_WAKEUP_SRC_PD7 PM_PIN_PULLDOWN_100K // PM_PIN_PULLUP_1M
-#define PD7_INPUT_ENABLE	1
-#define PD7_DATA_OUT		0
-#define PD7_OUTPUT_ENABLE	1
-#define PD7_FUNC			AS_GPIO
+#define EPD_SCL				GPIO_PC4
+#define PULL_WAKEUP_SRC_PC4 PM_PIN_PULLDOWN_100K // PM_PIN_PULLUP_1M
+#define PC4_INPUT_ENABLE	1
+#define PC4_DATA_OUT		0
+#define PC4_OUTPUT_ENABLE	1
+#define PC4_FUNC			AS_GPIO
 
 #if USE_TRIGGER_OUT
 

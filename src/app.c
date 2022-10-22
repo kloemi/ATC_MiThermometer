@@ -746,7 +746,7 @@ _attribute_ram_code_ void main_loop(void) {
 				bls_pm_setAppWakeupLowPower(0, 0); // clear callback
 			}
 		}
-#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_CGG1)
+#if (DEVICE_TYPE == DEVICE_MHO_C401) || (DEVICE_TYPE == DEVICE_CGG1) || (DEVICE_TYPE == DEVICE_AZARTON)
 		if (wrk_measure == 0 && stage_lcd) {
 			if (task_lcd()) {
 				if(!gpio_read(EPD_BUSY)) {
@@ -761,10 +761,6 @@ _attribute_ram_code_ void main_loop(void) {
 			} else {
 				cpu_set_gpio_wakeup(EPD_BUSY, Level_High, 0);  // pad high wakeup deepsleep disable
 			}
-		}
-#elif (DEVICE_TYPE == DEVICE_AZARTON)
-		if (wrk_measure == 0 && stage_lcd) {
-			task_lcd();
 		}
 #endif
 		bls_pm_setSuspendMask(

@@ -17,18 +17,18 @@ RAM uint8_t flg_lcd_init;
 RAM uint8_t lcd_refresh_cnt;
 RAM uint8_t epd_updated;
 
-const uint8_t LUT_init1[12] = {0x82, 0x68, 0x50,  0xE8, 0xD0, 0xA8,  0x65, 0x7B, 0x81,  0xE4, 0xE7, 0x0E};
-const uint8_t LUT_init2[12] = {0x82, 0x80, 0x00,  0xC8, 0x80, 0x80,  0x62, 0x7B, 0x81,  0xE4, 0xE7, 0x0E};
+const uint8_t LUT_init1[12] = {0x82, 0x68, 0x50, 0xE8, 0xD0, 0xA8, 0x65, 0x7B, 0x81, 0xE4, 0xE7, 0x0E};
+const uint8_t LUT_init2[12] = {0x82, 0x80, 0x00, 0xC8, 0x80, 0x80, 0x62, 0x7B, 0x81, 0xE4, 0xE7, 0x0E};
 
 //----------------------------------
 // define segments
 // the data in the arrays consists of {byte, bit} pairs of each segment
 //----------------------------------
-const uint8_t top_left[22] = {16, 7, 15, 4, 14, 1, 14, 7, 12, 5, 12, 4, 13, 3, 15, 7, 15, 6, 15, 5, 14, 0};
-const uint8_t top_middle[22] = {15, 0, 15, 1, 14, 6, 13, 0, 13, 5, 13, 4, 14, 5, 14, 4, 15, 3, 15, 2, 14, 3};
-const uint8_t top_right[22] = {13, 1, 13, 7, 12, 1, 12, 7, 11, 5, 11, 2, 12, 6, 12, 0, 13, 6, 13, 2, 12, 2};
-const uint8_t bottom_left[22] = {9, 1, 9, 7, 8, 5, 1, 1, 0, 3, 1, 4, 9, 4, 10, 0, 10, 6, 10, 3, 8, 2};
-const uint8_t bottom_right[22] = {7, 7, 6, 5, 2, 0, 2, 3, 0, 2, 1, 7, 2, 6, 7, 4, 7, 1, 8, 6, 6, 2};
+const uint8_t top_left[22] =   { 8, 7,  9, 2,  9, 1,  9, 0,  8, 5,  8, 0,  8, 1,  8, 2,  8, 3,  8, 4,  8, 6};
+const uint8_t top_middle[22] = {10, 7, 11, 2, 11, 1, 11, 0, 10, 5, 10, 0, 10, 1, 10, 2, 10, 3, 10, 4, 10, 6};
+const uint8_t top_right[22] =  {12, 7, 13, 2, 13, 1, 13, 0, 12, 5, 12, 0, 12, 1, 12, 2, 12, 3, 12, 4, 12, 6};
+const uint8_t bottom_left[22] = {1, 7,  2, 2,  2, 1,  2, 0,  1, 5,  1, 0,  1, 1,  1, 2,  1, 3,  1, 4,  1, 6};
+const uint8_t bottom_right[22]= {3, 7,  4, 2,  4, 1,  4, 0,  3, 5,  3, 0,  3, 1,  3, 2,  3, 3,  3, 4,  3, 6};
 
 // These values closely reproduce times captured with logic analyser
 #define delay_SPI_end_cycle() cpu_stall_wakeup_by_timer0((CLOCK_SYS_CLOCK_1US*12)/10) // real clk 4.4 + 4.4 us : 114 kHz)
@@ -144,10 +144,17 @@ _attribute_ram_code_ void show_battery_symbol(bool state){
 }
 
 _attribute_ram_code_ void show_ble_symbol(bool state){
-/* 	if (state)
-		display_buff[5] |= BIT(0); // "*"
+ 	if (state)
+		display_buff[0] |= BIT(4); // "*"
 	else
-		display_buff[5] &= ~BIT(0); */
+		display_buff[0] &= ~BIT(4);
+}
+
+_attribute_ram_code_ void show_connected_symbol(bool state){
+ 	if (state)
+		display_buff[0] |= BIT(0);
+	else
+		display_buff[0] &= ~BIT(0);
 }
 
 // 223 us
@@ -214,258 +221,158 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) static void epd_set_digit(
 
 /* number in 0.1 (-995..19995), Show: -99 .. -9.9 .. 199.9 .. 1999 */
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_big_number_x10(int16_t number){
-	/*display_buff[11] = 0;
+	display_buff[8] = 0;
+	display_buff[9] = 0;
+	display_buff[10] = 0;
+	display_buff[11] = 0; //"_"
 	display_buff[12] = 0;
 	display_buff[13] = 0;
-	display_buff[14] &= BIT(2); //"_"
-	display_buff[15] = 0;
-	display_buff[16] &= BIT(4) | BIT(5) | BIT(6);
 	if (number > 19995) {
 		// "Hi"
-   		display_buff[12] = BIT(4);
-   		display_buff[13] = BIT(0) | BIT(3);
-   		display_buff[14] = BIT(0) | BIT(1) | BIT(6) | BIT(7);
-   		display_buff[15] = BIT(4) | BIT(5) | BIT(6) | BIT(7);
+   		display_buff[8] = BIT(4);
+   		display_buff[9] = BIT(0) | BIT(3);
+   		display_buff[10] = BIT(0) | BIT(1) | BIT(6) | BIT(7);
+   		display_buff[11] = BIT(4) | BIT(5) | BIT(6) | BIT(7);
 	} else if (number < -995) {
 		// "Lo"
-   		display_buff[12] = BIT(4) | BIT(5);
-   		display_buff[13] = BIT(0) | BIT(3) | BIT(4) | BIT(5);
-   		display_buff[14] = BIT(3) | BIT(4) | BIT(5);
-   		display_buff[15] = BIT(5) | BIT(6) | BIT(7);
+   		display_buff[8] = BIT(4) | BIT(5);
+   		display_buff[9] = BIT(0) | BIT(3) | BIT(4) | BIT(5);
+   		display_buff[10] = BIT(3) | BIT(4) | BIT(5);
+   		display_buff[11] = BIT(5) | BIT(6) | BIT(7);
 	} else {
-		/* number: -995..19995 *
+		/* number: -995..19995 */
 		if (number > 1995 || number < -95) {
-			display_buff[16] &= ~BIT(5); // no point, show: -99..1999
+			display_buff[11] &= ~BIT(4); // no point, show: -99..1999
 			if (number < 0){
 				number = -number;
-				display_buff[14] = BIT(0); // "-"
+				display_buff[8] = BIT(6); // "-"
 			}
 			number = (number / 10) + ((number % 10) > 5); // round(div 10)
 		} else { // show: -9.9..199.9
-			display_buff[16] |= BIT(5); // point
+			display_buff[11] |= BIT(4); // point
 			if (number < 0){
 				number = -number;
-				display_buff[14] = BIT(0); // "-"
+				display_buff[8] = BIT(6); // "-"
 			}
 		}
-		/* number: -99..1999 *
+		/* number: -99..1999 */
 		if (number > 999) display_buff[12] |= BIT(3); // "1" 1000..1999
 		if (number > 99) epd_set_digit(display_buff, number / 100 % 10, top_left);
 		if (number > 9) epd_set_digit(display_buff, number / 10 % 10, top_middle);
 		else epd_set_digit(display_buff, 0, top_middle);
 		epd_set_digit(display_buff, number % 10, top_right);
-	}*/
+	}
 }
 
 /* -9 .. 99 */
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_small_number(int16_t number, bool percent){
-	display_buff[0] = 0;
 	display_buff[1] = 0;
 	display_buff[2] = 0;
-	display_buff[6] = 0;
-	display_buff[7] = 0;
-	display_buff[8] = 0;
-	display_buff[9] = 0;
-	display_buff[10] = 0;
+	display_buff[3] = 0;
+	display_buff[4] = 0;
 	if (percent)
-		display_buff[16] |= BIT(5); // "%" TODO 'C', '.', '(  )' ?
+		display_buff[5] |= BIT(0); // "%" TODO 'C', '.', '(  )' ?
 	if (number > 99) {
 		// "Hi"
 		display_buff[1] |= BIT(1) | BIT(4);
 		display_buff[2] |= BIT(0) | BIT(3);
-		display_buff[8] |= BIT(2) | BIT(5);
-		display_buff[9] |= BIT(4) | BIT(7);
-		display_buff[10] |= BIT(0) | BIT(3) | BIT(6);
+		display_buff[3] |= BIT(2) | BIT(5);
+		display_buff[4] |= BIT(4) | BIT(7);
 	} else if (number < -9) {
 		//"Lo"
-		display_buff[0] |= BIT(2) | BIT(3);
-		display_buff[1] |= BIT(4) | BIT(7);
-		display_buff[2] |= BIT(6) | BIT(3);
-		display_buff[6] |= BIT(2);
-		display_buff[9] |= BIT(4);
-		display_buff[10] |= BIT(0) | BIT(3) | BIT(6);
+		display_buff[1] |= BIT(2) | BIT(3);
+		display_buff[2] |= BIT(4) | BIT(7);
+		display_buff[3] |= BIT(6) | BIT(3);
+		display_buff[4] |= BIT(2);
 	} else {
 		if (number < 0) {
 			number = -number;
-			display_buff[8] |= BIT(2); // "-"
+			display_buff[1] |= BIT(6); // "-"
 		}
 		if (number > 9) epd_set_digit(display_buff, number / 10 % 10, bottom_left);
 		epd_set_digit(display_buff, number % 10, bottom_right);
 	}
 }
 
-void init_lcd(void) {
-	stage_lcd = 0;
-	memset(display_buff, 0, sizeof(display_buff));
-	// pulse SDA low for 110 milliseconds
-	gpio_write(EPD_SDA, LOW);
-    pm_wait_ms(140);
-	gpio_write(EPD_SDA, HIGH);
+void transmit_buffer(void) {
 
-	transmit(0, 0x002B);
-	pm_wait_ms(10);
-	transmit(0, 0x00A7);
-	pm_wait_ms(10);
-	transmit(0, 0x00E0);
-	pm_wait_us(75);
-	for (int i = 0; i < 12; i++)
-		transmit(0, LUT_init1[i]);
-	pm_wait_ms(84);
-
-	transmit(0, 0x00AC);
-	transmit(0, 0x002B);
-	pm_wait_ms(5);
-
+	// send header
 	transmit(0, 0x0040);
 	transmit(0, 0x00A9);
 	transmit(0, 0x00A8);
 
+    // send data
 	for (int i = 0; i < 14; i++)
 		transmit(1, display_buff[i]);
 
+    // send trailer
 	transmit(0, 0x00AB);
 	transmit(0, 0x00AA);
 	transmit(0, 0x00AF);
-	pm_wait_ms(1600);
+}
 
-	transmit(0, 0x00AE);
-	transmit(0, 0x0028);
-	transmit(0, 0x00AD);
+void init_lcd(void) {
+	stage_lcd = 0;
+
+	memset(display_buff, 0, sizeof(display_buff));
+	// pulse SDA low for 110 milliseconds
+	gpio_write(EPD_SDA, LOW);
+    pm_wait_ms(100);
+	gpio_write(EPD_RST, LOW);
+    pm_wait_us(20);
+    gpio_write(EPD_RST, HIGH);
+    pm_wait_us(20);
+	gpio_write(EPD_SDA, HIGH);
+
+	transmit(0, 0x002B);
+	pm_wait_ms(11);
+	transmit(0, 0x00A7);
+	pm_wait_ms(11);
+	transmit(0, 0x00E0);
+	pm_wait_us(76);
+	for (int i = 0; i < 12; i++)
+		transmit(0, LUT_init1[i]);
+	pm_wait_ms(85);
+
+	transmit(0, 0x00AC);
+	transmit(0, 0x002B);
+	pm_wait_ms(6);
+	transmit_buffer();	
+	stage_lcd = 2;
 }
 
 _attribute_ram_code_ void update_lcd(void){
-/* 	if (!stage_lcd) {
+ 	if (!stage_lcd) {
 		if (memcmp(&display_cmp_buff, &display_buff, sizeof(display_buff))) {
 			memcpy(&display_cmp_buff, &display_buff, sizeof(display_buff));
-			if (lcd_refresh_cnt) {
-				lcd_refresh_cnt--;
-				flg_lcd_init = 0;
-				stage_lcd = 1;
-			} else {
-				init_lcd(); // pulse RST_N low for 110 microseconds
-			}
+			stage_lcd = 1;
 		}
-	} */
+	}
 }
 
 _attribute_ram_code_ __attribute__((optimize("-Os"))) int task_lcd(void) {
-	/* if (gpio_read(EPD_BUSY)) {
+	if (gpio_read(EPD_BUSY)) {
 		switch (stage_lcd) {
-		case 1: // Update/Init lcd, stage 1
-			if (flg_lcd_init)
-				flg_lcd_init--;
-			// send Charge Pump ON command
-			transmit(0, POWER_ON);
-			// wait ~30 ms for the display to become ready to receive new
+		case 1:
+			for (int i = 0; i < 12; i++)
+				transmit(0, LUT_init2[i]);
+			pm_wait_ms(5);
+			transmit(0, 0x00AC);
+			transmit(0, 0x002B);
+			pm_wait_ms(5);
+			transmit_buffer();
 			stage_lcd = 2;
 			break;
-		case 2: // Update/Init lcd, stage 2
-			if (epd_updated == 0) {
-				// send next blocks ~25 ms
-				transmit(0, PANEL_SETTING);
-				transmit(1, 0x0B);
-				transmit(0, POWER_SETTING);
-				transmit(1, 0x46);
-				transmit(1, 0x46);
-				transmit(0, POWER_OFF_SEQUENCE_SETTING);
-				if (flg_lcd_init)
-					transmit(1, 0x00);
-				else
-					transmit(1, 0x06);
-				// Frame Rate Control
-				transmit(0, PLL_CONTROL);
-				if (flg_lcd_init)
-					transmit(1, 0x03); // transmit(1, 0x02);
-				else {
-					transmit(1, 0x07); // transmit(1, 0x03);
-					// NOTE: Original firmware makes partial refresh on update, but not when initialising the screen.
-					transmit(0, PARTIAL_DISPLAY_REFRESH);
-					transmit(1, 0x00);
-					transmit(1, 0x87);
-					transmit(1, 0x01);
-				}
-				// send the e-paper voltage settings (waves)
-				transmit(0, LUT_FOR_VCOM);
-				for (int i = 0; i < 15; i++)
-					transmit(1, T_LUTV_init[i]);
-
-				if (flg_lcd_init) {
-					transmit(0, LUT_CMD_0x23);
-					if (flg_lcd_init == 1) { // pass 2
-						for (int i = 0; i < 15; i++)
-							transmit(1, T_LUT_KW_update[i]);
-						transmit(0, LUT_CMD_0x26);
-						for (int i = 0; i < 15; i++)
-							transmit(1, T_LUT_KK_update[i]);
-						// start an initialization sequence (white - all 0x00)
-						transmit(0, DATA_START_TRANSMISSION_1);
-						for (int i = 0; i < 18; i++)
-							transmit(1, 0);
-						transmit(0, DATA_START_TRANSMISSION_2);
-						for (int i = 0; i < 18; i++)
-							transmit(1, 0);
-					} else { // pass 1
-						for (int i = 0; i < 15; i++)
-							transmit(1, T_LUT_KK_init[i]);
-						transmit(0, LUT_CMD_0x26);
-						for (int i = 0; i < 15; i++)
-							transmit(1, T_LUT_KW_init[i]);
-						// start an initialization sequence (black - all 0xFF)
-						transmit(0, DATA_START_TRANSMISSION_1);
-						for (int i = 0; i < 18; i++)
-							transmit(1, 0xff);
-						transmit(0, DATA_START_TRANSMISSION_2);
-						for (int i = 0; i < 18; i++)
-							transmit(1, 0xff);
-					}
-				} else {
-					transmit(0, LUT_CMD_0x23);
-					for (int i = 0; i < 15; i++)
-						transmit(1, T_LUTV_init[i]);
-
-					transmit(0, LUT_CMD_0x24);
-					for (int i = 0; i < 15; i++)
-						transmit(1, T_LUT_KK_update[i]);
-
-					transmit(0, LUT_CMD_0x25);
-					for (int i = 0; i < 15; i++)
-						transmit(1, T_LUT_KW_update[i]);
-
-					transmit(0, LUT_CMD_0x26);
-					for (int i = 0; i < 15; i++)
-						transmit(1, T_LUTV_init[i]);
-					// send the actual data
-					transmit(0, DATA_START_TRANSMISSION_1);
-					for (int i = 0; i < 18; i++)
-						transmit(1, display_buff[i]);
-				}
-			} else {
-				// send the actual data
-				transmit(0, DATA_START_TRANSMISSION_1);
-				for (int i = 0; i < 18; i++)
-					transmit(1, display_buff[i]);
-			}
-			stage_lcd = 3;
-			// Refresh
-			transmit(0, DISPLAY_REFRESH);
-			// wait ~1256 ms for the display to become ready to receive new
-			break;
-		case 3: // Update/Init lcd, stage 3
-			// send Charge Pump OFF command
-			transmit(0, POWER_OFF);
-			transmit(1, 0x03);
-			if (flg_lcd_init)
-				// wait ~20 ms for the display to become ready to receive new
-				stage_lcd = 1;
-			else {
-				epd_updated = 1;
-				stage_lcd = 0;
-			}
+		case 2:
+			transmit(0, 0x00AE);
+			transmit(0, 0x0028);
+			transmit(0, 0x00AD);
+			stage_lcd = 0;
 			break;
 		default:
 			stage_lcd = 0;
 		}
-	} */
+	}
 	return stage_lcd;
 }
 
