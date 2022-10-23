@@ -128,8 +128,7 @@ _attribute_ram_code_ void show_smiley(uint8_t state){
 			display_buff[6] |= BIT(4) | BIT(6);
 			break;
 		case 6:
-			display_buff[5] |= BIT(4) | BIT(6);
-			display_buff[6] |= BIT(0);
+			display_buff[6] |= BIT(0) | BIT(4) | BIT(6);
 			break;
 		case 7:
 			display_buff[5] |= BIT(4);
