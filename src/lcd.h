@@ -5,6 +5,8 @@
 #include "app_config.h"
 
 /* CGG1 no symbol 'smiley' ! */
+#define SMILE_HOT   3 		// "*(O^O)" sad hot
+#define SMILE_HOT2  4 		// "*(O^O).." sad hot
 #define SMILE_HAPPY 5 		// "(^-^)" happy
 #define SMILE_SAD   6 		// "(-^-)" sad
 #define TMP_SYM_C	0xA0	// "°C"

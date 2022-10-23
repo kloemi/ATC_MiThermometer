@@ -20,13 +20,13 @@ extern "C" {
 
 #define USE_CLOCK 			  1 // = 1 display clock, = 0 smile blinking
 #define USE_TIME_ADJUST		1 // = 1 time correction enabled
-#define USE_FLASH_MEMO		1 // = 1 flash logger enable
+#define USE_FLASH_MEMO		0 // = 1 flash logger enable
 #define USE_TRIGGER_OUT 	1 // = 1 use trigger out (GPIO_PA5)
 #define USE_WK_RDS_COUNTER	USE_TRIGGER_OUT // = 1 wake up when the reed switch is triggered + pulse counter
 
 #define USE_SECURITY_BEACON 1 // = 1 support encryption beacon (bindkey)
 #define USE_HA_BLE_BEACON	1 // = 1 https://github.com/custom-components/ble_monitor/issues/548
-#define USE_MIHOME_BEACON	1 // = 1 Compatible with MiHome beacon
+#define USE_MIHOME_BEACON	0 // = 1 Compatible with MiHome beacon
 
 #define USE_DEVICE_INFO_CHR_UUID 	1 // = 1 enable Device Information Characteristics
 
@@ -157,7 +157,7 @@ extern "C" {
 #define I2C_GROUP 	I2C_GPIO_GROUP_C2C3
 
 #define EPD_RST2			GPIO_PB7 // should be high
-#define PULL_WAKEUP_SRC_PB7 PM_PIN_PULLUP_10K
+#define PULL_WAKEUP_SRC_PB7 PM_PIN_PULLUP_1M
 
 #define EPD_RST 			GPIO_PD7 // should be high
 #define PULL_WAKEUP_SRC_PD7 PM_PIN_PULLUP_1M

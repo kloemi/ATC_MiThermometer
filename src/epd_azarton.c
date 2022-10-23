@@ -98,42 +98,44 @@ _attribute_ram_code_ void show_temp_symbol(uint8_t symbol) {
  * 6 = "^-^" sad
  * 7 = "oOo" */
 _attribute_ram_code_ void show_smiley(uint8_t state){
-/* 	// off
-	display_buff[3] = 0;
-	display_buff[4] = 0;
-	display_buff[5] &= BIT(0); // "*"
+ 	// off
+	display_buff[5] &= ~(BIT(2) | BIT(4) | BIT(6)); // do not reset %
+	display_buff[6] = 0;
+	display_buff[7] = 0;
+	if (state) {
+		display_buff[7] |= BIT(0); /* (  ) */
+	} 
 	switch(state & 7) {
 		case 1:
-			display_buff[3] |= BIT(2);
-			display_buff[4] |= BIT(4);
-		break;
+			display_buff[5] |= BIT(4);
+			display_buff[6] |= BIT(0);
+			break;
 		case 2:
-			display_buff[4] |= BIT(1) | BIT(4);
 			display_buff[5] |= BIT(6);
-		break;
+			display_buff[6] |= BIT(4) | BIT(6);
+			break;
 		case 3:
-			display_buff[4] |= BIT(1) | BIT(7);
-			display_buff[5] |= BIT(6);
-		break;
+			display_buff[6] |= BIT(0) | BIT(4) | BIT(6);
+		    display_buff[7] |= BIT(2);			
+			break;
 		case 4:
-			display_buff[3] |= BIT(2);
-			display_buff[4] |= BIT(1);
-			display_buff[5] |= BIT(6);
-		break;
+			display_buff[5] |= BIT(2);
+			display_buff[6] |= BIT(0) | BIT(2) | BIT(4) | BIT(6);
+		    display_buff[7] |= BIT(2);			
+			break;
 		case 5:
-			display_buff[3] |= BIT(2);
-			display_buff[4] |= BIT(1);
-		break;
+			display_buff[5] |= BIT(4) | BIT(6);
+			display_buff[6] |= BIT(4) | BIT(6);
+			break;
 		case 6:
-			display_buff[4] |= BIT(7);
-			display_buff[5] |= BIT(6);
-		break;
+			display_buff[5] |= BIT(4) | BIT(6);
+			display_buff[6] |= BIT(0);
+			break;
 		case 7:
-			display_buff[3] |= BIT(2);
-			display_buff[4] |= BIT(1) | BIT(4);
-			display_buff[5] |= BIT(6);
-		break;
-	} */
+			display_buff[5] |= BIT(4);
+			display_buff[6] |= BIT(0) | BIT(4) | BIT(6);
+			break;
+	}
 }
 
 _attribute_ram_code_ void show_battery_symbol(bool state){
@@ -155,48 +157,6 @@ _attribute_ram_code_ void show_connected_symbol(bool state){
 		display_buff[0] |= BIT(0);
 	else
 		display_buff[0] &= ~BIT(0);
-}
-
-// 223 us
-_attribute_ram_code_ __attribute__((optimize("-Os"))) static void transmit(uint8_t cd, uint8_t data_to_send) {
-    
-	gpio_write(EPD_SCL, HIGH);
-	// enable SPI
-	gpio_write(EPD_CSB, LOW);
-    delay_EPD_SCL_pulse();
-
-    // send the first bit, this indicates if the following is a command or data
-    if (cd != 0)
-        gpio_write(EPD_SDA, HIGH);
-    else
-        gpio_write(EPD_SDA, LOW);
-    delay_EPD_SCL_pulse();
-    gpio_write(EPD_SCL, LOW);
-    delay_EPD_SCL_pulse();
-	gpio_write(EPD_SCL, HIGH);
-    delay_EPD_SCL_pulse();
-
-    // send 8 bits
-    for (int i = 0; i < 8; i++) {
-        // set the MOSI according to the data
-        if (data_to_send & 0x80)
-            gpio_write(EPD_SDA, HIGH);
-        else
-            gpio_write(EPD_SDA, LOW);
-		
-		// start the clock cycle
-        gpio_write(EPD_SCL, LOW);
-        // prepare for the next bit
-        data_to_send = (data_to_send << 1);
-        delay_EPD_SCL_pulse();
-        // the data is read at rising clock (halfway the time MOSI is set)
-        gpio_write(EPD_SCL, HIGH);
-        delay_EPD_SCL_pulse();
-    }
-
-    // finish by disabling SPI
-    gpio_write(EPD_CSB, HIGH);
-    delay_SPI_end_cycle();
 }
 
 _attribute_ram_code_ __attribute__((optimize("-Os"))) static void epd_set_digit(uint8_t *buf, uint8_t digit, const uint8_t *segments) {
@@ -256,7 +216,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_big_number_x10(i
 			}
 		}
 		/* number: -99..1999 */
-		if (number > 999) display_buff[12] |= BIT(3); // "1" 1000..1999
+		if (number > 999) display_buff[7] |= BIT(4); // "1" 1000..1999
 		if (number > 99) epd_set_digit(display_buff, number / 100 % 10, top_left);
 		if (number > 9) epd_set_digit(display_buff, number / 10 % 10, top_middle);
 		else epd_set_digit(display_buff, 0, top_middle);
@@ -270,6 +230,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_small_number(int
 	display_buff[2] = 0;
 	display_buff[3] = 0;
 	display_buff[4] = 0;
+	display_buff[5] &= ~BIT(0);
 	if (percent)
 		display_buff[5] |= BIT(0); // "%" TODO 'C', '.', '(  )' ?
 	if (number > 99) {
@@ -292,6 +253,48 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void show_small_number(int
 		if (number > 9) epd_set_digit(display_buff, number / 10 % 10, bottom_left);
 		epd_set_digit(display_buff, number % 10, bottom_right);
 	}
+}
+
+// 80 us
+_attribute_ram_code_ __attribute__((optimize("-Os"))) static void transmit(uint8_t cd, uint8_t data_to_send) {
+    
+	gpio_write(EPD_SCL, HIGH);
+	// enable SPI
+	gpio_write(EPD_CSB, LOW);
+    delay_EPD_SCL_pulse();
+
+    // send the first bit, this indicates if the following is a command or data
+    if (cd != 0)
+        gpio_write(EPD_SDA, HIGH);
+    else
+        gpio_write(EPD_SDA, LOW);
+    delay_EPD_SCL_pulse();
+    gpio_write(EPD_SCL, LOW);
+    delay_EPD_SCL_pulse();
+	gpio_write(EPD_SCL, HIGH);
+    delay_EPD_SCL_pulse();
+
+    // send 8 bits
+    for (int i = 0; i < 8; i++) {
+        // set the MOSI according to the data
+        if (data_to_send & 0x80)
+            gpio_write(EPD_SDA, HIGH);
+        else
+            gpio_write(EPD_SDA, LOW);
+		
+		// start the clock cycle
+        gpio_write(EPD_SCL, LOW);
+        // prepare for the next bit
+        data_to_send = (data_to_send << 1);
+        delay_EPD_SCL_pulse();
+        // the data is read at rising clock (halfway the time MOSI is set)
+        gpio_write(EPD_SCL, HIGH);
+        delay_EPD_SCL_pulse();
+    }
+
+    // finish by disabling SPI
+    gpio_write(EPD_CSB, HIGH);
+    delay_SPI_end_cycle();
 }
 
 void transmit_buffer(void) {
