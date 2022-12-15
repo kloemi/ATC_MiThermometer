@@ -10,8 +10,8 @@
 
 #define DEF_EPD_REFRESH_CNT	32
 
-RAM uint8_t display_buff[14];
-RAM uint8_t display_cmp_buff[14];
+RAM uint8_t display_buff[16];
+RAM uint8_t display_cmp_buff[16];
 RAM uint8_t stage_lcd;
 RAM uint8_t flg_lcd_init;
 RAM uint8_t lcd_refresh_cnt;
@@ -304,7 +304,7 @@ void transmit_buffer(void) {
 	transmit(0, 0x00A8);
 
     // send data
-	for (int i = 0; i < 14; i++)
+	for (int i = 0; i < 16; i++)
 		transmit(1, display_buff[i]);
 
     // send trailer
